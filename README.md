@@ -2,6 +2,8 @@
 
 Implementation of "Escaping the Autoencoder Trap: Grassmannian Tangent-Space Regularization for Tail Coverage"
 
+📄 **Paper**: [Available at SSRN 5984494](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5984494)
+
 **Key Innovation**: Geometric regularization using Grassmann manifolds and exterior algebra to improve rare mode coverage in autoencoders, avoiding the mode collapse and tail mass misallocation observed in VAEs.
 
 ## Project Structure
@@ -239,15 +241,23 @@ Decoder Jacobian-vector products computed via:
 - Finite difference approximation (ε=1e-4) for MLP decoders
 - Total overhead: ~10-20% vs standard autoencoder training
 
+## Paper
+
+**Escaping the Autoencoder Trap: Grassmannian Tangent-Space Regularization for Tail Coverage**
+
+Available at: [SSRN 5984494](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5984494)
+
 ## Citation
 
 If you use this code, please cite:
 
 ```bibtex
-@article{sudjianto2025geometric,
+@article{sudjianto2025escaping,
   title={Escaping the Autoencoder Trap: Grassmannian Tangent-Space Regularization for Tail Coverage},
   author={Sudjianto, Agus},
-  year={2025}
+  journal={Available at SSRN 5984494},
+  year={2025},
+  url={https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5984494}
 }
 ```
 
