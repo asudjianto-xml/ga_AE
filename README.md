@@ -1,6 +1,8 @@
-# Geometric Autoencoder Experiments
+# Grassmannian Autoencoder (GA-AE)
 
-Implementation of experiments for "Diagnosing the Generative Gap in Autoencoders: A Geometric Perspective on Volume, Subspace Collapse and Off-Manifold Failure"
+Implementation of "Escaping the Autoencoder Trap: Grassmannian Tangent-Space Regularization for Tail Coverage"
+
+**Key Innovation**: Geometric regularization using Grassmann manifolds and exterior algebra to improve rare mode coverage in autoencoders, avoiding the mode collapse and tail mass misallocation observed in VAEs.
 
 ## Project Structure
 
@@ -88,95 +90,67 @@ This will train a small model for 5 epochs and verify all components are working
 
 ## Experiments
 
-### E1: The AE Trap
+### E1-E7: 2D Gaussian Mixture Experiments
 
-**Goal**: Demonstrate that low reconstruction error does not imply good generation quality.
+**Goal**: Validate geometric diagnostics and tail coverage on controlled synthetic data.
 
-**Dataset**: 20D Mixture of Gaussians
+**Dataset**: 2D Mixture of Gaussians with 2% rare tail mode
 
-**Models**: Standard AE
+**Models**: Standard AE, Contractive AE, Spectral Norm AE, VAE (β=0.1, 1.0, 4.0), GA-AE
 
-**Key Metrics**:
-- Reconstruction MSE vs Energy Distance
-- k-volume collapse indicators
-- Off-manifold decoder stability
+**Key Results**:
+- Standard AE: 0 rare samples captured (0% recall)
+- Contractive AE: 10/44 rare samples (23% recall)
+- **GA-AE: 18/44 rare samples (41% recall)**
+- VAE: 243-249/2000 samples classified as rare (6× overproduction, tail mass misallocation)
 
-**Expected Result**: Reconstruction error decreases, but generation quality plateaus or worsens. Geometric diagnostics predict this gap.
+### E8: MNIST with Class Imbalance
 
-### E2: Tail Stress Test
+**Goal**: Validate on real image data at scale.
 
-**Goal**: Show that AEs miss rare modes while GA-AE captures them better.
+**Dataset**: MNIST with digit 9 reduced to 2% training frequency (1,000/50,000 samples)
 
-**Dataset**: 20D MoG with 2% rare mode
+**Models**: VAE (β=1.0), GA-AE
 
-**Models**: AE, GA-AE, CAE
+**Training**:
+```bash
+# VAE
+python train_mnist.py --model-type vae --beta 1.0 --epochs 50 --seed 0
 
-**Key Metrics**:
-- Rare mode recall
-- Mode coverage
-- k-volume preservation
+# GA-AE
+python train_mnist.py --model-type ga-ae --lambda-grass 0.1 --lambda-entropy 0.01 --epochs 50 --seed 0
+```
 
-**Expected Result**: GA-AE achieves better rare mode recall than baselines.
+**Key Results**:
+- **VAE**: Severe mode collapse
+  - Generated: 2000/2000 samples → digit 9 (100%)
+  - Rare Mode Lift: 50× (massive overproduction)
+  - Sample variance: 0.0005 (all nearly identical)
+- **GA-AE**: Near-perfect calibration
+  - Generated: 55/2000 samples → digit 9 (2.75%)
+  - Rare Mode Lift: 1.375× (excellent calibration)
+  - Sample variance: 0.240 (480× better diversity)
 
-### E3: VAE Posterior Collapse Sweep
+**Finding**: Geometric regularization prevents mode collapse and achieves calibrated rare mode coverage on real images.
 
-**Goal**: Show that KL divergence alone doesn't predict collapse; k-volume does.
+### E9: CelebA with Rare Attributes (In Progress)
 
-**Dataset**: 20D MoG
+**Goal**: Validate on high-resolution face images with rare attribute combinations.
 
-**Models**: VAE with β ∈ {0.1, 1.0, 4.0} and KL annealing variants
+**Dataset**: CelebA 64×64 with rare attribute combination (e.g., Male + Eyeglasses + Bald ≈ 1-2% natural frequency)
 
-**Key Metrics**:
-- KL divergence
-- Mean encoder k-volume
-- Generation quality
+**Models**: ImageVAE, ImageGAAE (convolutional architectures)
 
-**Expected Result**: k-volume metrics predict generation failure earlier than KL.
+**Training**:
+```bash
+# VAE
+python train_celeba.py --model-type vae --beta 1.0 --image-size 64 --latent-dim 128 --epochs 50
 
-### E4: VAE Trade-off
+# GA-AE
+python train_celeba.py --model-type ga-ae --lambda-grass 0.1 --lambda-entropy 0.01 --image-size 64 --latent-dim 128 --epochs 50
+```
 
-**Goal**: Compare KL-based vs MMD-based posterior matching with geometry regularization.
-
-**Dataset**: 20D MoG
-
-**Models**: Standard VAE, VAE + annealing, GA-VAE with MMD
-
-**Key Metrics**:
-- Latent space match quality
-- Generation metrics
-- Geometric gap scores
-
-**Expected Result**: MMD-based approach better accommodates geometry preservation.
-
-### E5: Baselines Comparison
-
-**Goal**: Show that existing Jacobian-based methods don't fully address selective k-collapse.
-
-**Dataset**: Swiss roll embedded in 50D
-
-**Models**: AE, Spectral Norm AE, Sobolev AE, GA-AE
-
-**Key Metrics**:
-- k-volume for different k
-- EDC metrics
-- Generation quality
-
-**Expected Result**: Spectral norm helps stability but doesn't restore k-subspace structure like GA-AE.
-
-### E6: Controlled Teacher Generator
-
-**Goal**: Validate diagnostics against ground-truth generator with known Jacobian.
-
-**Dataset**: Teacher network synthetic (smooth vs sharp curvature)
-
-**Models**: AE, GA-AE
-
-**Key Metrics**:
-- Decoder Jacobian vs teacher Jacobian
-- Radius stress test
-- Generation error
-
-**Expected Result**: GA diagnostics correctly predict mismatch under off-manifold sampling.
+**Status**: Dataset loader and CNN architectures implemented, ready for training.
 
 ## Results
 
@@ -189,52 +163,81 @@ Results are saved in `results/<experiment_name>/`:
 
 ## Diagnostic Metrics
 
-### Geometric Diagnostics
+### Rare Mode Evaluation
 
-- **Log k-volume**: `log_vol_{E,k}(x)` - measures preservation of k-dimensional subspaces
-- **EDC (Encoder-Decoder Consistency)**: `||J_DE(x)V_k - V_k||_F^2` - round-trip distortion
-- **Generative Gap Index**: Difference between on-manifold and off-manifold metrics
-- **Decoder Stability**: Off-manifold volume under radius stress test
+- **Rare Mode Rate (RMR)**: Fraction of generated samples in rare class
+  - For MNIST: RMR = (# generated digit 9) / 2000
+  - Target: 2% (matching training frequency)
+- **Rare Mode Lift (RML)**: RMR / target_ratio
+  - RML = 1.0× indicates perfect calibration
+  - RML >> 1 indicates overproduction (e.g., VAE mode collapse)
+  - RML << 1 indicates underproduction
+- **Rare Recall@N**: Fraction of test rare samples covered
+  - Recall = (# gen rare) / (# test rare)
+  - Measures coverage rather than calibration
 
-### Generation Metrics
+### Sample Quality
 
-- **MMD**: Maximum Mean Discrepancy between real and generated
-- **Energy Distance**: Statistical distance measure
-- **k-NN Precision/Recall**: Coverage metrics
-- **Mode Coverage**: Fraction of modes with generated samples
-- **Rare Mode Recall**: Capture rate of rare modes
+- **Sample Variance**: var(generated images)
+  - Measures diversity across generated samples
+  - Low variance (< 0.001) indicates mode collapse
+  - High variance (> 0.1) indicates healthy diversity
+- **Reconstruction Loss**: MSE on test set
+  - Validates on-manifold performance
+- **Energy Distance**: Statistical distance between real and generated distributions
+  - Used for 2D Gaussian experiments
 
-## Implementation Details
+## Methodology
 
-### Jacobian Computation
+### Core Idea
 
-Uses `torch.func.jvp` for efficient Jacobian-vector products. For k orthonormal directions V_k:
-- Compute `J_E(x) @ V_k` via k JVP calls
-- Form Gram matrix `A^T A` where `A = J_E(x) V_k`
-- Compute log-det with Cholesky decomposition
+The autoencoder trap: good reconstruction ≠ good generation. Standard autoencoders optimize reconstruction loss on-manifold (conditioned on real data) but provide no guarantees off-manifold (sampling from prior). This leads to mode collapse and failure to capture rare modes.
 
-### Regularization
+**Our Solution**: Explicitly regularize the geometry of the decoder's tangent space using:
+1. **Grassmann Spread Loss**: Repels decoder tangent k-blades on the Grassmann manifold
+2. **Blade Entropy Loss**: Maximizes diversity across multi-grade volumes (k=2, 4, 8)
+
+### Loss Functions
 
 **GA-AE Loss**:
 ```
-L = L_recon + λ_k * sum_k max(0, τ_k - log_vol_k) + λ_edc * EDC_k
+L = L_recon + λ_grass * L_grass - λ_entropy * H_blade
 ```
 
-**GA-VAE Loss**:
+Where:
+- `L_recon`: MSE reconstruction loss
+- `L_grass`: Grassmann spread loss = E[sim_Grass(blade_k(D, z_i), blade_k(D, z_j))]
+  - Penalizes similarity between decoder tangent k-blades at different latent points
+  - Computed via: sim = sqrt(det(U_i^T U_j U_j^T U_i)) where U_i, U_j are orthonormalized decoder Jacobian frames
+- `H_blade`: Blade entropy = -Σ p_k log(p_k)
+  - Encourages balanced expansion across k-dimensional scales
+  - p_k = (s_k + δ) / Σ(s_k' + δ) where s_k = E[exp(log_vol_k)]
+- Typical hyperparameters: λ_grass = 0.1, λ_entropy = 0.01
+
+**VAE Loss** (baseline):
 ```
-L = L_recon + β * KL + λ_k * vol_penalty + λ_edc * EDC_k
+L = L_recon + β * KL(q(z|x) || p(z))
 ```
-Or with MMD:
-```
-L = L_recon + λ_mmd * MMD(q_agg, p) + λ_k * vol_penalty + λ_edc * EDC_k
-```
+
+Where:
+- `KL`: KL divergence between posterior and prior N(0, I)
+- β: KL weighting (typically 1.0)
+
+### Jacobian Computation
+
+Decoder Jacobian-vector products computed via:
+1. Sample k random orthonormal directions W_k in latent space (via QR decomposition of Gaussian samples)
+2. Compute J_D(z) @ W_k using finite differences: (D(z + ε*w) - D(z)) / ε
+3. Orthonormalize resulting frame: U = qf(J_D(z) @ W_k)
+4. Compute Grassmann similarity or k-volumes via Gram determinants
 
 ### Computational Efficiency
 
-- Diagnostics computed on subset of validation data (n=1000)
-- k-volume: exact for small k (≤8), stochastic estimation for global volume
-- PCA directions precomputed once on training data
-- GPU acceleration for all operations
+- Geometric losses computed on subsampled pairs/batches during training
+- Grassmann spread: typically 4-16 pairs per batch
+- Blade entropy: 16-32 samples for expectation
+- Finite difference approximation (ε=1e-4) for MLP decoders
+- Total overhead: ~10-20% vs standard autoencoder training
 
 ## Citation
 
