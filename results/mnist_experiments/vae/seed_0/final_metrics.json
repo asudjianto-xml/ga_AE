@@ -1,0 +1,12 @@
+{
+  "test": {
+    "loss": 0.270102795958519,
+    "recon_loss": 0.2700832262635231
+  },
+  "rare": {
+    "test_rare_count": 1009.0,
+    "gen_rare_count": 2000,
+    "rare_recall": 1.9821605550049555,
+    "rare_lift": 50.0
+  }
+}

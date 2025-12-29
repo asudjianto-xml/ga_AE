@@ -1,0 +1,17 @@
+{
+  "model_type": "ae",
+  "epochs": 5,
+  "batch_size": 128,
+  "lr": 0.0003,
+  "device": "cuda",
+  "diagnostic_every": 2,
+  "checkpoint_every": 5,
+  "k_values": [
+    1,
+    2,
+    4
+  ],
+  "eps_values": [
+    1e-06
+  ]
+}

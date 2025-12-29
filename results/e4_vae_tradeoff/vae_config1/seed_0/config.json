@@ -1,0 +1,11 @@
+{
+  "model_type": "vae",
+  "epochs": 200,
+  "batch_size": 256,
+  "lr": 0.0003,
+  "device": "cuda",
+  "diagnostic_every": 5,
+  "checkpoint_every": 50,
+  "beta": 1.0,
+  "use_kl_annealing": true
+}

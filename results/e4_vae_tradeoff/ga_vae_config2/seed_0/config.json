@@ -1,0 +1,14 @@
+{
+  "model_type": "ga_vae",
+  "epochs": 200,
+  "batch_size": 256,
+  "lr": 0.0003,
+  "device": "cuda",
+  "diagnostic_every": 5,
+  "checkpoint_every": 50,
+  "beta": 1.0,
+  "use_mmd_posterior": true,
+  "lambda_mmd": 10.0,
+  "lambda_k_volume": 0.1,
+  "lambda_edc": 0.1
+}
