@@ -4,7 +4,7 @@
 # Uses rare attribute combination: Male + Eyeglasses + Bald (~1-2% natural frequency)
 #
 
-PYTHON="~/jupyterlab/ga_verify/venv/bin/python"
+PYTHON="/home/asudjianto/jupyterlab/ga_verify/venv/bin/python"
 SCRIPT="train_celeba.py"
 OUTPUT_DIR="results/celeba_multiseed"
 EPOCHS=50

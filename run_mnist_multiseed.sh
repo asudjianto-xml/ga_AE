@@ -4,7 +4,7 @@
 # This script trains both GA-AE and VAE models with 5 different random seeds
 #
 
-PYTHON="~/jupyterlab/ga_verify/venv/bin/python"
+PYTHON="/home/asudjianto/jupyterlab/ga_verify/venv/bin/python"
 SCRIPT="train_mnist.py"
 OUTPUT_DIR="results/mnist_multiseed"
 EPOCHS=50
