@@ -245,7 +245,7 @@ If you use this code, please cite:
 
 ```bibtex
 @article{sudjianto2025geometric,
-  title={Diagnosing the Generative Gap in Autoencoders: A Geometric Perspective},
+  title={Escaping the Autoencoder Trap: Grassmannian Tangent-Space Regularization for Tail Coverage},
   author={Sudjianto, Agus},
   year={2025}
 }
